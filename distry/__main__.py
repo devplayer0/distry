@@ -1,5 +1,16 @@
+import sys
+
+import yaml
 from werkzeug.serving import run_simple
 
-from . import app
+with open('config.yaml') as conf_file:
+    config = yaml.safe_load(conf_file)
 
-run_simple('::', 8080, app)
+from . import virt
+from . import app
+app.virt = virt.VMManager(config['hypervisors'])
+
+try:
+    run_simple('::', 80, app)
+finally:
+    app.virt.close()

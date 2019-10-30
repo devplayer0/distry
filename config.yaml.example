@@ -1,0 +1,9 @@
+hypervisors:
+  my.hypervisor:
+    port: 22
+    username: root
+    key: AAAAAAAAAAAAAAAAAAAAAAAAA
+    instance_size:
+      cpus: 2
+      ram: 2048
+      disk: 8192

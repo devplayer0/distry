@@ -1,7 +1,7 @@
-from flask import Flask
+from flask import Flask, jsonify
 
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return 'hello, world!'
+    return jsonify([d.name() for d in app.virt.next_hypervisor().conn.listAllDomains()])
