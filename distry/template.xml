@@ -22,20 +22,20 @@
     <disk type='file' device='cdrom'>
       <driver name='qemu'/>
       <source file='$iso'/>
-      <target dev='vda' bus='virtio'/>
+      <target dev='sda' bus='sata'/>
       <readonly/>
     </disk>
     <disk type='volume' device='disk'>
       <driver name='qemu' type='qcow2'/>
       <source pool='$storage_pool' volume='$storage_volume.qcow2'/>
-      <target dev='vdb' bus='virtio'/>
+      <target dev='vda' bus='virtio'/>
     </disk>
 
-    <graphics type='vnc' passwd='$vnc_password' sharePolicy='allow-exclusive' websocket=-'1'>
+    <graphics type='vnc' passwd='$vnc_password' sharePolicy='allow-exclusive' websocket='-1'>
       <listen type='address' address='::'/>
     </graphics>
     <video>
-      <model type='qxl'/>
+      <model type='cirrus'/>
     </video>
 
     <interface type='network'>

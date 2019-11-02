@@ -3,12 +3,14 @@ hypervisors:
     port: 22
     username: root
     key: AAAAAAAAAAAAAAAAAAAAAAAAA
-    storage_pool: distry
-    dom_prefix: distry-
-    instance_size:
+    instance_config:
       cpus: 2
-      ram: 2048
+      memory: 2048
       disk: 8192
+      ovmf_path: /usr/share/ovmf/x64/OVMF_CODE.fd
+      dom_prefix: distry-
+      storage_pool: distry
+      network: distry
 distros:
   manjaro:
     name: Manjaro 18.1.2 XFCE
