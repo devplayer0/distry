@@ -10,9 +10,29 @@ async function heartbeat() {
     });
 }
 
+async function reset() {
+    const res = await fetch("{{ url_for('vm_reset', id_=id_) }}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `password=${password}`
+    });
+
+    if (res.status >= 400) {
+        alert('Failed to hard reset VM');
+    }
+}
+
 window.onload = () => {
     setInterval(heartbeat, {{ heartbeat_interval * 1000 }});
 
     const novncFrame = document.querySelector('#novnc');
     document.querySelector('#fullscreen').addEventListener('click', e => novncFrame.requestFullscreen());
+
+    document.querySelector('#reset').addEventListener('click', e => {
+        if (confirm('Are you sure?')) {
+            reset();
+        }
+    });
 };

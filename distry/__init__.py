@@ -65,3 +65,9 @@ def view_vm(id_):
 def vm_heartbeat(id_):
     app.virt.monitor.refresh(id_)
     return '', 204
+
+@app.route('/vms/<id_>/reset', methods=['POST'])
+@auth_vm()
+def vm_reset(id_):
+    request.vm['dom'].reset()
+    return '', 204
