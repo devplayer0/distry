@@ -6,7 +6,7 @@
     <button id="fullscreen">Fullscreen</button>
     <button id="reset">Hard reset</button>
 </p>
-<iframe id="novnc" src="{{ novnc_url }}" width="1600" height="900" allow="fullscreen"></iframe>
+<iframe id="novnc" src="{{ novnc_url|safe }}" width="1024" height="768" allow="fullscreen"></iframe>
 
 <script>
 {% include 'virt.js' %}

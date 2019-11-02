@@ -24,7 +24,7 @@ async function reset() {
     }
 }
 
-window.onload = () => {
+window.onload = e => {
     setInterval(heartbeat, {{ heartbeat_interval * 1000 }});
 
     const novncFrame = document.querySelector('#novnc');
@@ -36,3 +36,4 @@ window.onload = () => {
         }
     });
 };
+window.onbeforeunload = e => true;
