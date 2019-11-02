@@ -1,4 +1,5 @@
 import string
+import xml.etree.ElementTree as ET
 from os import path
 import tempfile
 
@@ -61,6 +62,7 @@ class Hypervisor:
 
             try:
                 dom.create()
+                vnc_port = int(ET.fromstring(dom.XMLDesc()).find('./devices/graphics').attrib['websocket'])
                 self.vms[id_] = (dom, vol)
             except:
                 dom.undefineFlags(flags=libvirt.VIR_DOMAIN_UNDEFINE_NVRAM)
@@ -69,7 +71,7 @@ class Hypervisor:
             vol.delete()
             raise
 
-        return id_, vnc_password
+        return id_, vnc_port, vnc_password
 
     def delete_vm(self, id_):
         dom, vol = self.vms[id_]
@@ -95,6 +97,7 @@ class VMManager:
         self.distros = config['distros']
         self.hypervisors = [Hypervisor({k: config['distros'][k]['paths'][hostname] for k in config['distros']}, \
             hostname, **conf) for hostname, conf in config['hypervisors'].items()]
+        self.vms = {}
 
         if not self.hypervisors:
             raise VirtException('at least one hypervisor must be configured')
@@ -113,11 +116,19 @@ class VMManager:
         return hyp_by_count[0]
 
     def new_vm(self, distro):
-        return self.next_hypervisor().new_vm(distro)
+        hypervisor = self.next_hypervisor()
+        id_, *ret = hypervisor.new_vm(distro)
+        self.vms[id_] = hypervisor
+
+        return (id_, *ret)
+    def delete_vm(self, id_):
+        v = self.vms[id_]
+        v.delete_vm(id_)
+        del self.vms[id_]
 
     def close(self):
-        for v in self.hypervisors:
-            v.close()
+        for h in self.hypervisors:
+            h.close()
 
     def __enter__(self):
         return self
