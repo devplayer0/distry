@@ -6,17 +6,21 @@ import shortuuid
 import libvirt
 from libvirt import libvirtError
 
+class VirtException(Exception):
+    pass
+
+def next_id():
+    return shortuuid.uuid()[:10]
+
 with open(path.join(path.dirname(__file__), 'template_volume.xml')) as f:
     VOLUME_TEMPLATE = string.Template(f.read())
 with open(path.join(path.dirname(__file__), 'template.xml')) as f:
     DOM_TEMPLATE = string.Template(f.read())
 
-def next_id():
-    return shortuuid.uuid()[:10]
-
 class Hypervisor:
-    def __init__(self, distros, hostname, key, instance_config, port=22, username='root'):
+    def __init__(self, distros, hostname, key, max_vms, instance_config, port=22, username='root'):
         self.distros = distros
+        self.hostname = hostname
         self.instance_config = instance_config
         if 'dom_prefix' not in self.instance_config:
             self.instance_config['dom_prefix'] = 'distry-'
@@ -24,6 +28,7 @@ class Hypervisor:
             self.instance_config['storage_pool'] = 'distry'
         if 'network' not in self.instance_config:
             self.instance_config['network'] = 'distry'
+        self.max_vms = max_vms
         self.vms = {}
 
         with tempfile.NamedTemporaryFile('w', prefix='distry', suffix='.key') as keyfile:
@@ -86,19 +91,26 @@ class Hypervisor:
 
 class VMManager:
     def __init__(self, config):
+        self.config = config
         self.distros = config['distros']
         self.hypervisors = [Hypervisor({k: config['distros'][k]['paths'][hostname] for k in config['distros']}, \
             hostname, **conf) for hostname, conf in config['hypervisors'].items()]
-        self.current_hypervisor = 0
+
+        if not self.hypervisors:
+            raise VirtException('at least one hypervisor must be configured')
 
     def next_hypervisor(self):
-        next = self.hypervisors[self.current_hypervisor]
+        hyp_by_count = {}
+        for h in self.hypervisors:
+            count = len(list(filter(lambda d: d.startswith(h.instance_config['dom_prefix']),
+                h.conn.listDefinedDomains())))
+            if count < h.max_vms:
+                hyp_by_count[h.hostname] = h
+        hyp_by_count = [hyp_by_count[hostname] for hostname in sorted(hyp_by_count, key=hyp_by_count.get)]
 
-        self.current_hypervisor += 1
-        if self.current_hypervisor == len(self.hypervisors):
-            self.current_hypervisor = 0
-
-        return next
+        if not hyp_by_count:
+            raise VirtException('no capacity available')
+        return hyp_by_count[0]
 
     def new_vm(self, distro):
         return self.next_hypervisor().new_vm(distro)

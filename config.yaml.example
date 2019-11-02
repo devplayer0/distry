@@ -3,6 +3,7 @@ hypervisors:
     port: 22
     username: root
     key: AAAAAAAAAAAAAAAAAAAAAAAAA
+    max_vms: 10
     instance_config:
       cpus: 2
       memory: 2048
