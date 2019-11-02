@@ -1,7 +1,10 @@
 import string
+import logging
 import xml.etree.ElementTree as ET
 from os import path
 import tempfile
+import time
+import threading
 
 import shortuuid
 import libvirt
@@ -31,6 +34,7 @@ class Hypervisor:
             self.instance_config['network'] = 'distry'
         self.max_vms = max_vms
         self.vms = {}
+        self.lock = threading.RLock()
 
         with tempfile.NamedTemporaryFile('w', prefix='distry', suffix='.key') as keyfile:
             keyfile.write(key)
@@ -41,50 +45,63 @@ class Hypervisor:
         self.storage_pool = self.conn.storagePoolLookupByName(self.instance_config['storage_pool'])
 
     def new_vm(self, distro):
-        id_ = next_id()
-        dom_name = f'{self.instance_config["dom_prefix"]}{id_}'
+        with self.lock:
+            id_ = next_id()
+            dom_name = f'{self.instance_config["dom_prefix"]}{id_}'
 
-        vol = self.storage_pool.createXML(VOLUME_TEMPLATE.substitute(
-                name=id_,
-                size=self.instance_config['disk']
-            ),
-            flags=libvirt.VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA)
-        try:
-            vnc_password = shortuuid.uuid()
-            dom = self.conn.defineXMLFlags(DOM_TEMPLATE.substitute(
-                    name=dom_name,
-                    iso=self.distros[distro],
-                    storage_volume=id_,
-                    vnc_password=vnc_password,
-                    **self.instance_config
+            vol = self.storage_pool.createXML(VOLUME_TEMPLATE.substitute(
+                    name=id_,
+                    size=self.instance_config['disk']
                 ),
-                flags=libvirt.VIR_DOMAIN_DEFINE_VALIDATE)
-
+                flags=libvirt.VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA)
             try:
-                dom.create()
-                vnc_port = int(ET.fromstring(dom.XMLDesc()).find('./devices/graphics').attrib['websocket'])
-                self.vms[id_] = (dom, vol)
-            except:
-                dom.undefineFlags(flags=libvirt.VIR_DOMAIN_UNDEFINE_NVRAM)
-                raise
-        except:
-            vol.delete()
-            raise
+                vnc_password = shortuuid.uuid()
+                dom = self.conn.defineXMLFlags(DOM_TEMPLATE.substitute(
+                        name=dom_name,
+                        iso=self.distros[distro],
+                        storage_volume=id_,
+                        vnc_password=vnc_password,
+                        **self.instance_config
+                    ),
+                    flags=libvirt.VIR_DOMAIN_DEFINE_VALIDATE)
 
-        return id_, vnc_port, vnc_password
+                try:
+                    dom.create()
+                    vnc_port = int(ET.fromstring(dom.XMLDesc()).find('./devices/graphics').attrib['websocket'])
+                    self.vms[id_] = {
+                        'dom': dom,
+                        'vol': vol,
+                        'vnc': {
+                            'host': self.hostname,
+                            'port': vnc_port,
+                            'password': vnc_password
+                        }
+                    }
+                except:
+                    dom.undefineFlags(flags=libvirt.VIR_DOMAIN_UNDEFINE_NVRAM)
+                    raise
+            except:
+                vol.delete()
+                raise
+
+            return id_
 
     def delete_vm(self, id_):
-        dom, vol = self.vms[id_]
-        if dom.isActive():
-            dom.destroy()
+        with self.lock:
+            info = self.vms[id_]
+            dom = info['dom']
+            if dom.isActive():
+                dom.destroy()
 
-        dom.undefineFlags(flags=libvirt.VIR_DOMAIN_UNDEFINE_NVRAM)
-        vol.delete()
+            dom.undefineFlags(flags=libvirt.VIR_DOMAIN_UNDEFINE_NVRAM)
+            info['vol'].delete()
+            del self.vms[id_]
 
     def close(self):
-        for id_ in self.vms:
-            self.delete_vm(id_)
-        self.conn.close()
+        with self.lock:
+            for id_ in self.vms:
+                self.delete_vm(id_)
+            self.conn.close()
 
     def __enter__(self):
         return self
@@ -117,10 +134,12 @@ class VMManager:
 
     def new_vm(self, distro):
         hypervisor = self.next_hypervisor()
-        id_, *ret = hypervisor.new_vm(distro)
+        id_ = hypervisor.new_vm(distro)
         self.vms[id_] = hypervisor
 
-        return (id_, hypervisor.hostname, *ret)
+        return id_
+    def get_vm(self, id_):
+        return self.vms[id_].vms[id_]
     def delete_vm(self, id_):
         v = self.vms[id_]
         v.delete_vm(id_)
@@ -134,3 +153,49 @@ class VMManager:
         return self
     def __exit__(self, t, v, tb):
         self.close()
+
+class Monitor:
+    def __init__(self, manager):
+        self.manager = manager
+        self.heartbeats = {}
+        self.lock = threading.RLock()
+        self.running = False
+
+    def refresh(self, id_):
+        if id_ not in self.manager.vms:
+            raise VirtException(f'vm with id {id_} does not exist')
+        with self.lock:
+            self.heartbeats[id_] = time.time()
+
+    def run(self):
+        while self.running:
+            with self.lock:
+                defunct = set()
+                for id_, last in self.heartbeats.items():
+                    if time.time() - last > self.manager.config['heartbeat']['max']:
+                        defunct.add(id_)
+                for id_ in defunct:
+                    try:
+                        logging.info('deleting defunct vm %s', id_)
+                        self.manager.delete_vm(id_)
+                    except Exception as e:
+                        logging.error('failed to delete vm %s: %s', id_, e)
+                    del self.heartbeats[id_]
+            time.sleep(0.5)
+
+    def start(self):
+        if self.running:
+            raise VirtException('already running')
+
+        self.running = True
+        self.thread = threading.Thread(target=self.run)
+        self.thread.start()
+    def stop(self):
+        self.running = False
+        self.thread.join()
+
+    def __enter__(self):
+        self.start()
+        return self
+    def __exit__(self, t, v, tb):
+        self.stop()

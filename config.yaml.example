@@ -1,5 +1,8 @@
 novnc:
   tls: true
+heartbeat:
+  interval: 5
+  max: 10
 hypervisors:
   my.hypervisor:
     port: 22

@@ -1,5 +1,17 @@
 {% extends 'base.html' %}
 
+{% block header %}
+<p id="subtext">Try a Linux distro without having to download or install anything!</p>
+{% endblock %}
+
 {% block content %}
-<a href="{{ url_for('new_vm') }}">make a vm</a>
+<form action="{{ url_for('new_vm') }}" method="POST">
+    <label for="distro-select">Distro:</label>
+    <select name="distro" id="distro-select">
+        {% for id_ in distros %}
+        <option value="{{ id_ }}">{{ distros[id_]['name'] }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Create VM</button>
+</form>
 {% endblock %}
