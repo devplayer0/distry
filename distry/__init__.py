@@ -1,6 +1,7 @@
 from functools import wraps
 
-from flask import Flask, request, render_template, url_for, redirect, make_response
+import werkzeug
+from flask import Flask, request, render_template, url_for, redirect
 
 def js_bool(b):
     return 'true' if b else 'false'
@@ -71,3 +72,11 @@ def vm_heartbeat(id_):
 def vm_reset(id_):
     request.vm['dom'].reset()
     return '', 204
+
+@app.errorhandler(werkzeug.exceptions.InternalServerError)
+def handle_error(e):
+    original = getattr(e, "original_exception", None)
+    if original is None:
+        return render_template('error.html', message='Unknown error'), 500
+
+    return render_template('error.html', message=str(original)), 500
