@@ -8,7 +8,7 @@ with open('config.yaml') as conf_file:
 
 from . import virt
 from . import app
-app.virt = virt.VMManager(config['hypervisors'])
+app.virt = virt.VMManager(config)
 
 try:
     run_simple('::', 80, app)

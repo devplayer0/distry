@@ -1,0 +1,47 @@
+<domain type='kvm'>
+  <name>$name</name>
+  <memory unit='MiB'>$memory</memory>
+  <vcpu>$cpus</vcpu>
+
+  <os>
+    <type arch='x86_64' machine='q35'>hvm</type>
+    <loader readonly='yes' type='pflash'>$ovmf_path</loader>
+    <bootmenu enable='yes'/>
+  </os>
+
+  <features>
+    <acpi/>
+    <apic/>
+  </features>
+
+  <cpu mode='host-passthrough' check='none'/>
+
+  <devices>
+    <emulator>/usr/bin/qemu-system-x86_64</emulator>
+
+    <disk type='file' device='cdrom'>
+      <driver name='qemu'/>
+      <source file='$iso'/>
+      <target dev='vda' bus='virtio'/>
+      <readonly/>
+    </disk>
+    <disk type='volume' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source pool='$storage_pool' volume='$storage_volume.qcow2'/>
+      <target dev='vdb' bus='virtio'/>
+    </disk>
+
+    <graphics type='vnc' passwd='$vnc_password' sharePolicy='allow-exclusive' websocket=-'1'>
+      <listen type='address' address='::'/>
+    </graphics>
+    <video>
+      <model type='qxl'/>
+    </video>
+
+    <interface type='network'>
+      <source network='$network'/>
+      <model type='virtio'/>
+    </interface>
+  </devices>
+
+</domain>

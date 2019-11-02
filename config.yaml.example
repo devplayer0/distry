@@ -3,7 +3,14 @@ hypervisors:
     port: 22
     username: root
     key: AAAAAAAAAAAAAAAAAAAAAAAAA
+    storage_pool: distry
+    dom_prefix: distry-
     instance_size:
       cpus: 2
       ram: 2048
       disk: 8192
+distros:
+  manjaro:
+    name: Manjaro 18.1.2 XFCE
+    paths:
+      my.hypervisor: /var/lib/libvirt/images/manjaro.iso
