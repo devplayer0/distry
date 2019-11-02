@@ -17,4 +17,5 @@ app.virt.monitor.start()
 try:
     run_simple('::', 80, app)
 finally:
+    app.virt.monitor.stop()
     app.virt.close()
