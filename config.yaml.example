@@ -1,3 +1,5 @@
+novnc:
+  tls: true
 hypervisors:
   my.hypervisor:
     port: 22

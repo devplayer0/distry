@@ -43,5 +43,4 @@
       <model type='virtio'/>
     </interface>
   </devices>
-
 </domain>

@@ -11,11 +11,11 @@ class VirtException(Exception):
     pass
 
 def next_id():
-    return shortuuid.uuid()[:10]
+    return shortuuid.uuid()[:8]
 
 with open(path.join(path.dirname(__file__), 'template_volume.xml')) as f:
     VOLUME_TEMPLATE = string.Template(f.read())
-with open(path.join(path.dirname(__file__), 'template.xml')) as f:
+with open(path.join(path.dirname(__file__), 'template_domain.xml')) as f:
     DOM_TEMPLATE = string.Template(f.read())
 
 class Hypervisor:
@@ -120,7 +120,7 @@ class VMManager:
         id_, *ret = hypervisor.new_vm(distro)
         self.vms[id_] = hypervisor
 
-        return (id_, *ret)
+        return (id_, hypervisor.hostname, *ret)
     def delete_vm(self, id_):
         v = self.vms[id_]
         v.delete_vm(id_)
