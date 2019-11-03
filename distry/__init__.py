@@ -1,12 +1,14 @@
 from functools import wraps
 
 import werkzeug
+from werkzeug.middleware.proxy_fix import ProxyFix
 from flask import Flask, request, render_template, url_for, redirect
 
 def js_bool(b):
     return 'true' if b else 'false'
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
 
 @app.route('/')
 def index():
@@ -49,7 +51,7 @@ def auth_vm(form=True):
 def view_vm(id_):
     novnc_url = url_for('static', filename='novnc/vnc.html',
         autoconnect=js_bool(True),
-        path=f'/vnc/{id_}',
+        path=f'vnc/{id_}',
         encrypt=js_bool(app.virt.config['novnc']['tls']),
         password=request.vm['vnc']['password'])
 
