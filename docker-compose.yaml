@@ -4,6 +4,6 @@ services:
     image: devplayer0/distry
     build: .
     ports:
-      - 8080:80
+      - 80:80
     volumes:
       - ./config.yaml:/opt/config.yaml:ro

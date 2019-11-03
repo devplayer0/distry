@@ -5,10 +5,12 @@ from os import path
 import tempfile
 import time
 import threading
+import socket
 
 import shortuuid
 import libvirt
 from libvirt import libvirtError
+import redis
 
 class VirtException(Exception):
     pass
@@ -34,6 +36,7 @@ class Hypervisor:
             self.instance_config['network'] = 'distry'
         self.max_vms = max_vms
         self.vms = {}
+        self.redis = redis.Redis(unix_socket_path='/run/redis.sock', decode_responses=True)
         self.lock = threading.RLock()
 
         with tempfile.NamedTemporaryFile('w', prefix='distry', suffix='.key') as keyfile:
@@ -77,6 +80,7 @@ class Hypervisor:
                             'password': vnc_password
                         }
                     }
+                    self.redis.set(id_, f'{socket.gethostbyname(self.hostname)}:{vnc_port}')
                 except:
                     dom.undefineFlags(flags=libvirt.VIR_DOMAIN_UNDEFINE_NVRAM)
                     raise
@@ -96,6 +100,7 @@ class Hypervisor:
             dom.undefineFlags(flags=libvirt.VIR_DOMAIN_UNDEFINE_NVRAM)
             info['vol'].delete()
             del self.vms[id_]
+            self.redis.delete(id_)
 
     def close(self):
         with self.lock:

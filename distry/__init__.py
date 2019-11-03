@@ -49,9 +49,7 @@ def auth_vm(form=True):
 def view_vm(id_):
     novnc_url = url_for('static', filename='novnc/vnc.html',
         autoconnect=js_bool(True),
-        host=request.vm['vnc']['host'],
-        port=request.vm['vnc']['port'],
-        path=[''],
+        path=f'/vnc/{id_}',
         encrypt=js_bool(app.virt.config['novnc']['tls']),
         password=request.vm['vnc']['password'])
 
