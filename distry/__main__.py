@@ -14,6 +14,7 @@ openresty_proc = subprocess.Popen(['/usr/sbin/nginx', '-c', '/opt/openresty.conf
 
 from . import virt
 from . import app
+app.config['SERVER_NAME'] = config['public_host']
 app.virt = virt.VMManager(config)
 app.virt.monitor = virt.Monitor(app.virt)
 app.virt.monitor.start()
