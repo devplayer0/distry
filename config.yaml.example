@@ -1,4 +1,3 @@
-public_host: localhost
 novnc:
   tls: true
 heartbeat:
