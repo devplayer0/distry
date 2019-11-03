@@ -1,24 +1,52 @@
 novnc:
+  # Should noVNC attempt to use wss instead of ws?
+  # Only enable this if your public-facing web server for Distry
+  # is using HTTPS!
   tls: true
 heartbeat:
+  # How often the client will send heartbeat requests (seconds)
   interval: 5
+  # How long after the last heartbeat the server should wait
+  # before considering a VM "defunct" and destroying it (seconds)
   max: 10
 hypervisors:
+  # Each key is the hostname of a box running libvirt - the box
+  # must be accessible over SSH (and websocket VNC!) from Distry
   my.hypervisor:
+    # SSH port
     port: 22
+    # SSH user (this user must have write access to libvirt!)
     username: root
+    # SSH private key
     key: AAAAAAAAAAAAAAAAAAAAAAAAA
+    # Maximum number of Distry VM's that can be running on this
+    # machine at any given time
     max_vms: 10
     instance_config:
+      # Number of CPU threads to allocate to each VM
       cpus: 2
+      # Amount of RAM to allocate to each VM (in MiB)
       memory: 2048
+      # Amount of disk space to allocate to each VM (in MiB)
       disk: 8192
+      # Path to OVMF (UEFI firmware)
+      # You might need to install this from your distribution's
+      # package manager. The path to the firmware may also differ.
       ovmf_path: /usr/share/ovmf/x64/OVMF_CODE.fd
+      # Prefix for the names of libvirt domains managed by Distry
       dom_prefix: distry-
+      # Storage pool where volumes for Distry will be created
       storage_pool: distry
+      # libvirt network which Distry VM's will be connected to
       network: distry
 distros:
+  # Each key is the "id" of a distro (used in the form request
+  # from the browser)
   manjaro:
+    # Name of the distro (displayed in the browser)
     name: Manjaro 18.1.2 XFCE
+    # There should be a `hypervisor.hostname: path_to_iso` mapping
+    # for every hypervisor defined above (so that the image can
+    # be loaded on every machine)
     paths:
       my.hypervisor: /var/lib/libvirt/images/manjaro.iso
