@@ -1,6 +1,10 @@
 # Distry
 _Try a Linux distro without having to download or install anything!_
 
+<p align="center">
+  <img alt="Demo" src="demo.gif?raw=true">
+</p>
+
 ## What is this?
 TL;DR: Spin up a VM on a remote server and access it through your browser. All resources are released once the tab is
 closed.
