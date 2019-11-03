@@ -7,8 +7,7 @@ RUN apk --no-cache add openresty@testing redis openssh libvirt pkgconf musl-dev 
     apk --no-cache del pkgconf musl-dev gcc libvirt-dev
 
 WORKDIR '/opt'
-RUN mkdir -p distry/static && \
-    wget -O - https://github.com/novnc/noVNC/archive/v1.1.0.tar.gz | tar zx && mv noVNC-* distry/static/novnc
+RUN wget -O - https://github.com/novnc/noVNC/archive/v1.1.0.tar.gz | tar zx && mv noVNC-* novnc
 COPY distry/ /opt/distry
 RUN mkdir /tmp/nginx && ln -s /tmp/nginx /var/tmp/nginx
 COPY redis.conf openresty.conf /opt/
