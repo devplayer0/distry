@@ -58,6 +58,7 @@ def view_vm(id_):
     return render_template('view-vm.html',
         novnc_url=novnc_url,
         id_=id_,
+        distro=app.virt.config['distros'][request.vm['distro']]['name'],
         password=request.vm['vnc']['password'],
         heartbeat_interval=app.virt.config['heartbeat']['interval'])
 
@@ -71,6 +72,12 @@ def vm_heartbeat(id_):
 @auth_vm()
 def vm_reset(id_):
     request.vm['dom'].reset()
+    return '', 204
+
+@app.route('/vms/<id_>/launch', methods=['POST'])
+@auth_vm()
+def vm_launch(id_):
+    request.vm['dom'].create()
     return '', 204
 
 @app.errorhandler(werkzeug.exceptions.InternalServerError)

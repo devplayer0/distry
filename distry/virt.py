@@ -74,6 +74,7 @@ class Hypervisor:
                     self.vms[id_] = {
                         'dom': dom,
                         'vol': vol,
+                        'distro': distro,
                         'vnc': {
                             'host': self.hostname,
                             'port': vnc_port,

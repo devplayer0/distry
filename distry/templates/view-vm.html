@@ -1,10 +1,22 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Your VM</h1>
+<h1>Your {{ distro }} VM</h1>
+<p>
+    The window below is a virtual monitor + keyboard + mouse connected to the virtual machine. You might have to click
+    inside the window if your keystrokes aren't registering properly.
+</p>
+<ul>
+    <li>The "hard reset" button will immediately reboot the VM (use only if the VM is locked up)</li>
+    <li>
+        Use the "power on" button if you accidentally shut the VM down (click connect in the noVNC window a few seconds
+        after to get remote control again)
+    </li>
+</ul>
 <p>
     <button id="fullscreen">Fullscreen</button>
     <button id="reset">Hard reset</button>
+    <button id="launch">Power on</button>
 </p>
 <iframe id="novnc" src="{{ novnc_url|safe }}" width="1024" height="768" allow="fullscreen"></iframe>
 

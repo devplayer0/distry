@@ -9,7 +9,6 @@ async function heartbeat() {
         body: `password=${password}`
     });
 }
-
 async function reset() {
     const res = await fetch("{{ url_for('vm_reset', id_=id_) }}", {
         method: 'POST',
@@ -21,6 +20,19 @@ async function reset() {
 
     if (res.status >= 400) {
         alert('Failed to hard reset VM');
+    }
+}
+async function launch() {
+    const res = await fetch("{{ url_for('vm_launch', id_=id_) }}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `password=${password}`
+    });
+
+    if (res.status >= 400) {
+        alert('Failed to power on VM - is it already running?');
     }
 }
 
@@ -35,5 +47,7 @@ window.onload = e => {
             reset();
         }
     });
+
+    document.querySelector('#launch').addEventListener('click', e => launch());
 };
 window.onbeforeunload = e => true;
