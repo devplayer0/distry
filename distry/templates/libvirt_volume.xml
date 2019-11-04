@@ -1,6 +1,6 @@
 <volume type='file'>
-  <name>${name}.qcow2</name>
-  <capacity unit='MiB'>$size</capacity>
+  <name>{{ name }}.qcow2</name>
+  <capacity unit='MiB'>{{ size }}</capacity>
   <allocation>0</allocation>
   <target>
     <format type='qcow2'/>

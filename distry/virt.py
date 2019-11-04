@@ -1,4 +1,3 @@
-import string
 import logging
 import xml.etree.ElementTree as ET
 from os import path
@@ -8,6 +7,7 @@ import threading
 import socket
 
 import shortuuid
+from flask import render_template
 import libvirt
 from libvirt import libvirtError
 import redis
@@ -17,11 +17,6 @@ class VirtException(Exception):
 
 def next_id():
     return shortuuid.uuid()[:8]
-
-with open(path.join(path.dirname(__file__), 'template_volume.xml')) as f:
-    VOLUME_TEMPLATE = string.Template(f.read())
-with open(path.join(path.dirname(__file__), 'template_domain.xml')) as f:
-    DOM_TEMPLATE = string.Template(f.read())
 
 class Hypervisor:
     def __init__(self, distros, hostname, key, max_vms, instance_config, port=22, username='root'):
@@ -52,14 +47,16 @@ class Hypervisor:
             id_ = next_id()
             dom_name = f'{self.instance_config["dom_prefix"]}{id_}'
 
-            vol = self.storage_pool.createXML(VOLUME_TEMPLATE.substitute(
+            vol = self.storage_pool.createXML(
+                render_template('libvirt_volume.xml',
                     name=id_,
                     size=self.instance_config['disk']
                 ),
                 flags=libvirt.VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA)
             try:
                 vnc_password = shortuuid.uuid()
-                dom = self.conn.defineXMLFlags(DOM_TEMPLATE.substitute(
+                dom = self.conn.defineXMLFlags(
+                    render_template('libvirt_domain.xml',
                         name=dom_name,
                         iso=self.distros[distro],
                         storage_volume=id_,

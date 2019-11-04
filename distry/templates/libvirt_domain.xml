@@ -1,11 +1,11 @@
 <domain type='kvm'>
-  <name>$name</name>
-  <memory unit='MiB'>$memory</memory>
-  <vcpu>$cpus</vcpu>
+  <name>{{ name }}</name>
+  <memory unit='MiB'>{{ memory }}</memory>
+  <vcpu>{{ cpus }}</vcpu>
 
   <os>
     <type arch='x86_64' machine='q35'>hvm</type>
-    <loader readonly='yes' type='pflash'>$ovmf_path</loader>
+    <loader readonly='yes' type='pflash'>{{ ovmf_path }}</loader>
     <bootmenu enable='yes' timeout='5000'/>
   </os>
 
@@ -21,17 +21,17 @@
 
     <disk type='file' device='cdrom'>
       <driver name='qemu'/>
-      <source file='$iso'/>
+      <source file='{{ iso }}'/>
       <target dev='sda' bus='sata'/>
       <readonly/>
     </disk>
     <disk type='volume' device='disk'>
       <driver name='qemu' type='qcow2'/>
-      <source pool='$storage_pool' volume='$storage_volume.qcow2'/>
+      <source pool='{{ storage_pool }}' volume='{{ storage_volume }}.qcow2'/>
       <target dev='vda' bus='virtio'/>
     </disk>
 
-    <graphics type='vnc' passwd='$vnc_password' sharePolicy='allow-exclusive' websocket='-1'>
+    <graphics type='vnc' passwd='{{ vnc_password }}' sharePolicy='allow-exclusive' websocket='-1'>
       <listen type='address' address='::'/>
     </graphics>
     <video>
@@ -39,7 +39,7 @@
     </video>
 
     <interface type='network'>
-      <source network='$network'/>
+      <source network='{{ network }}'/>
       <model type='virtio'/>
     </interface>
   </devices>
