@@ -39,6 +39,9 @@ hypervisors:
       storage_pool: distry
       # libvirt network which Distry VM's will be connected to
       network: distry
+      # List of libvirt nwfilters to apply to the network interface
+      filters:
+        - block-lan
 distros:
   # Each key is the "id" of a distro (used in the form request
   # from the browser)

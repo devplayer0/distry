@@ -39,6 +39,9 @@
     </video>
 
     <interface type='network'>
+      {% for filter in filters %}
+      <filterref filter='{{ filter }}'/>
+      {% endfor %}
       <source network='{{ network }}'/>
       <model type='virtio'/>
     </interface>
